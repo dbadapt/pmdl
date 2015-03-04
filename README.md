@@ -12,4 +12,4 @@ server.
 
 Lines beginning with '--' will be ignored. 
 
-Usage: ../pmdl/pmdl.pl [dsn] [username] {password}
+Usage: perl pmdl.pl [dsn] [username] {password}
