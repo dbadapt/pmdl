@@ -2,7 +2,6 @@
 use strict;
 
 use DBI;
-use Try::Tiny;
 
 # david.bennett@percona.com - 2015-03-04 
 # Thanks to Ross for a stackoverflow post that assisted in writing this
@@ -30,9 +29,10 @@ END_OF_USAGE
 
 sub dbi_err_handler
 {
-    my($message) = @_;
+    my($line, $err, $message) = @_;
     my $retval=1;
-    if($message=~ m/DEADLOCK/i)
+    print "$line: caught ($err) $message\n";
+    if($message =~ m/deadlock found/i || $message =~ m/lock wait timeout/i)
     {
        $retval=0; # we'll check this value and sleep/re-execute if necessary
     }
@@ -41,7 +41,7 @@ sub dbi_err_handler
 
 # main loop
 
-my $dbh = DBI->connect($ARGV[0], $ARGV[1], $ARGV[2], {'RaiseError' => 1});
+my $dbh = DBI->connect($ARGV[0], $ARGV[1], $ARGV[2], { 'RaiseError' => 1, PrintError => 0 });
 
 my $line=0;
 my $cmd='';
@@ -65,12 +65,11 @@ while (<STDIN>) {
     my $db_res=0;
     while($db_res==0) {
       $db_res=1;
-      try {
-        $sth->execute();
-      } catch {
-        print "$line: caught $_\n$cmd\n";
-        $db_res=dbi_err_handler($_);
+      $sth->execute();
+      if ($sth->err) {
+        $db_res=dbi_err_handler($line, $sth->err, $sth->errstr);
         if($db_res==0){sleep 3;}
+        print "---RETRYING---\n";
       }
     }
     $sth->finish();
@@ -81,5 +80,3 @@ while (<STDIN>) {
 
 $dbh->disconnect();
 exit 0;
-
-  
