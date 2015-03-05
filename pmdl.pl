@@ -32,7 +32,8 @@ sub dbi_err_handler
     my($line, $err, $message) = @_;
     my $retval=1;
     print "$line: caught ($err) $message\n";
-    if($message =~ m/deadlock found/i || $message =~ m/lock wait timeout/i)
+    # return status 0 on deadlock or lock wait to force a retry
+    if($err = 1205 || $err == 1213)
     {
        $retval=0; # we'll check this value and sleep/re-execute if necessary
     }
