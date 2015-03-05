@@ -41,7 +41,7 @@ sub dbi_err_handler
 
 # main loop
 
-my $dbh = DBI->connect($ARGV[0], $ARGV[1], $ARGV[2], { 'RaiseError' => 1, PrintError => 0 });
+my $dbh = DBI->connect($ARGV[0], $ARGV[1], $ARGV[2], { 'RaiseError' => 0, PrintError => 0 });
 
 my $line=0;
 my $cmd='';
